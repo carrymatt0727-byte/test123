@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>法規條文全文檢索系統</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", sans-serif; }
+    body { background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b; }
+    .container { max-width: 900px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 28px; }
+    h1 { margin: 0 0 8px 0; color: #0f172a; font-size: 28px; }
+    p.subtitle { margin: 0; color: #64748b; font-size: 14px; }
+    .search-container { position: sticky; top: 12px; z-index: 10; margin-bottom: 24px; }
+    .search-box { width: 100%; padding: 16px 20px; font-size: 16px; border: 2px solid #cbd5e1; border-radius: 12px; outline: none; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
+    .search-box:focus { border-color: #2563eb; box-shadow: 0 4px 16px rgba(37,99,235,0.15); }
+    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .law-title { font-size: 18px; font-weight: 700; color: #1e3a8a; }
+    .badge { background: #eff6ff; color: #1d4ed8; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+    .content { font-size: 15px; line-height: 1.7; color: #334155; white-space: pre-line; }
+    .tag-list { margin-top: 12px; }
+    .tag { display: inline-block; background: #f1f5f9; color: #475569; font-size: 12px; padding: 3px 10px; border-radius: 6px; margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚖️ 法律與規章全文檢索系統</h1>
+      <p class="subtitle">收錄《中華民國刑法》與《中華民國陸海空軍刑法》</p>
+    </header>
+    
+    <div class="search-container">
+      <input type="text" id="searchInput" class="search-box" placeholder="搜尋條文內容、條號或關鍵字（如：停權、過失、長官、正當防衛）..." oninput="handleSearch()">
+    </div>
+    
+    <div id="results"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+  <script>
+    let lawData = [];
+    let fuse;
+
+    async function init() {
+      // 可替換為 fetch('laws.json') 讀取外部 JSON
+      lawData = /* 貼上上述 laws.json 陣列內容 */;
+
+      fuse = new Fuse(lawData, {
+        keys: ['law_name', 'article', 'content', 'category', 'tags'],
+        threshold: 0.3
+      });
+
+      renderResults(lawData);
+    }
+
+    function renderResults(data) {
+      const container = document.getElementById('results');
+      if (data.length === 0) {
+        container.innerHTML = '<div class="card" style="text-align:center; color:#94a3b8;">未找到相關條文</div>';
+        return;
+      }
+
+      container.innerHTML = data.map(item => `
+        <div class="card">
+          <div class="card-header">
+            <span class="law-title">${item.law_name} ${item.article}</span>
+            <span class="badge">${item.category}</span>
+          </div>
+          <div class="content">${item.content}</div>
+          <div class="tag-list">
+            ${item.tags.map(t => `<span class="tag">#${t}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function handleSearch() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) {
+        renderResults(lawData);
+      } else {
+        const results = fuse.search(query).map(result => result.item);
+        renderResults(results);
+      }
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
